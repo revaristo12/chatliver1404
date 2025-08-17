@@ -1,0 +1,16 @@
+# Configurações do Flask
+SECRET_KEY=dev-secret-key-change-in-production
+FLASK_ENV=development
+FLASK_DEBUG=1
+
+# Configurações do banco de dados
+DATABASE_URL=sqlite:///instance/chat.db
+
+# Configurações de criptografia
+E2EE_ENABLED=False
+
+# Configurações de upload
+MAX_CONTENT_LENGTH=16777216
+
+# Configurações de convite
+INVITE_EXPIRY_HOURS=72

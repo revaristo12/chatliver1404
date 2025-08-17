@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: chatliver1404_postgres
+    environment:
+      POSTGRES_DB: chatliver1404
+      POSTGRES_USER: chatliver1404
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chatliver1404_secure_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - chatliver1404_network
+    restart: unless-stopped
+
+  # Redis para cache e sessões
+  redis:
+    image: redis:7-alpine
+    container_name: chatliver1404_redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-chatliver1404_redis_password}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - chatliver1404_network
+    restart: unless-stopped
+
+  # Aplicação CHATLIVER1404
+  app:
+    build: .
+    container_name: chatliver1404_app
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://chatliver1404:${POSTGRES_PASSWORD:-chatliver1404_secure_password}@postgres:5432/chatliver1404
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-chatliver1404_redis_password}@redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-your-super-secret-key-change-this-in-production}
+      - MAIL_SERVER=${MAIL_SERVER:-smtp.gmail.com}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USE_TLS=${MAIL_USE_TLS:-True}
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+    volumes:
+      - app_uploads:/app/static/uploads
+      - app_logs:/app/logs
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - chatliver1404_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx como proxy reverso
+  nginx:
+    image: nginx:alpine
+    container_name: chatliver1404_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - app_uploads:/var/www/uploads:ro
+    depends_on:
+      - app
+    networks:
+      - chatliver1404_network
+    restart: unless-stopped
+
+  # Certbot para SSL automático
+  certbot:
+    image: certbot/certbot
+    container_name: chatliver1404_certbot
+    volumes:
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./nginx/www:/var/www/certbot
+    command: certonly --webroot --webroot-path=/var/www/certbot --email ${CERTBOT_EMAIL:-admin@chatliver1404.com} --agree-tos --no-eff-email -d ${DOMAIN:-chatliver1404.com}
+    depends_on:
+      - nginx
+    networks:
+      - chatliver1404_network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  app_uploads:
+    driver: local
+  app_logs:
+    driver: local
+
+networks:
+  chatliver1404_network:
+    driver: bridge
+
+

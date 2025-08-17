@@ -1,0 +1,70 @@
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Ambientes virtuais
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Banco de dados
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads (serão volume)
+static/uploads/
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentação
+README.md
+*.md
+
+# Arquivos temporários
+*.tmp
+*.temp
+
+
